@@ -2,6 +2,10 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <ctime>
+#include <cstdlib>
+#include <string>
+#include <climits>
 
 #define ROW 6
 #define COL 7
@@ -14,6 +18,7 @@ bool player1;
 char grid[ROW][COL];
 int turns;
 int inpPos[COL];
+int won;
 
 class Player {
 
@@ -52,6 +57,13 @@ vector<int>	getNextPositions() {
 		}
 	}
 	return v;
+}
+
+int getRandomPosition(vector<int> & v) {
+
+	int randIndex = rand() % static_cast<int>(v.size()+1);
+	return v[randIndex];
+
 }
 
 void updateTurn() {
@@ -93,9 +105,11 @@ void printGrid() {
 }
 
 void buildGrid() {
-	
+
 	memset(grid, '*', sizeof grid);
-	memset(inpPos, ROW-1, sizeof inpPos);
+	for(int i = 0; i < COL; ++i) {
+		inpPos[i] = ROW-1;
+	}
 }
 
 bool findWin(Player p) {
@@ -105,6 +119,7 @@ bool findWin(Player p) {
 		for(int i = 0; i < ROW; ++i) {
 			if((grid[i][j] == color) && (grid[i][j+1] == color) && (grid[i][j+2] == color) && (grid[i][j+3] == color)) {
 				cout<<"Horizontal : "<<i<<" "<<j<<endl;
+				won = player1 ? 1 : 2;
 				return true;
 			}
 		}
@@ -114,6 +129,7 @@ bool findWin(Player p) {
 		for(int i = 0; i < ROW-3; ++i) {
 			if((grid[i][j] == color) && (grid[i+1][j] == color) && (grid[i+2][j] == color) && (grid[i+3][j] == color)) {
 				cout<<"Vertical : "<<i<<" "<<j<<endl;
+				won = player1 ? 1 : 2;
 				return true;
 			}
 		}
@@ -123,6 +139,7 @@ bool findWin(Player p) {
 		for(int i = 0; i < ROW-3; ++i) {
 			if((grid[i][j] == color) && (grid[i+1][j+i] == color) && (grid[i+2][j+2] == color) && (grid[i+3][j+3] == color)) {
 				cout<<"Pos Diag : "<<i<<" "<<j<<endl;
+				won = player1 ? 1 : 2;
 				return true;
 			}
 		}
@@ -132,6 +149,7 @@ bool findWin(Player p) {
 		for(int i = 3; i < ROW; ++i) {
 			if((grid[i][j] == color) && (grid[i-1][j+i] == color) && (grid[i-2][j+2] == color) && (grid[i-3][j+3] == color)) {
 				cout<<"Neg Diag : "<<i<<" "<<j<<endl;
+				won = player1 ? 1 : 2;
 				return true;
 			}
 		}
@@ -150,7 +168,9 @@ void play(Player p) {
 		cout<<"Invalid move ! Please try again.\n\n";
 	}
 	else {
-		grid[inpPos[col-1]][col-1] = p.getPiece();
+		cout<<inpPos[col-1]<<" "<<col-1<<endl;
+		grid[inpPos[col-1]--][col-1] = p.getPiece();
+		findWin(p);
 		updateTurn();
 	}
 }
@@ -169,7 +189,7 @@ int getWindowScore(int count, int empty) {
 	return 0;
 }
 
-int getScore(player p) {
+int getScore(Player p) {
 
 	int score = 0, countP, empty;
 	char color = p.getPiece();
@@ -237,24 +257,71 @@ int getScore(player p) {
 	return score;
 }
 
-int miniMax(Player p1, Player p2, int depth, int alpha, int beta, bool maximizingPlayer) {
-	
-	vector<int> nextPos = getNextPositions(p1);
+pair<int,int> miniMax(char grid[ROW][COL], Player p1, Player p2, int depth, int alpha, int beta, bool maximizingPlayer) {
+
+	pair<int,int>  colScore;
+	vector<int> nextPos = getNextPositions();
 	bool winP1 = findWin(p1);
 	bool winP2 = findWin(p2);
-	if(winP1)	return -MAXSCORE;
-	if(winP2)	return MAXSCORE;
-	if(isMaxTurns())	return 0;
+	int col, score = 0, optScore;
+	if(isMaxTurns())	return make_pair(-1, 0);
+	col = getRandomPosition(nextPos);
+	if(winP1)	return make_pair(col, -MAXSCORE);
+	if(winP2)	return make_pair(col, MAXSCORE);
 	if(depth == 0) {
-		return getScore(p2);
+		cout<<"getScore(p2) = "<<getScore(p2)<<endl;
+		return make_pair(col, getScore(p2));
 	}
+	char tempGrid[ROW][COL];
 	if(maximizingPlayer) {
-		
+		optScore = INT_MIN;
+		for(int i = 0; i < nextPos.size(); ++i) {
+			copy(grid, grid + ROW*COL, tempGrid);
+			tempGrid[inpPos[nextPos[i]]][nextPos[i]] = p2.getPiece();
+			cout<<depth<<" : "<<col<<" : "<<score<<endl;
+			colScore = miniMax(tempGrid, p1, p2, depth-1, alpha, beta, false);
+			col = colScore.first;
+			score = colScore.second;
+			if(score > optScore) {
+				optScore = score;
+				col = nextPos[i];
+			}
+			alpha = max(alpha, optScore);
+			if(alpha >= beta) {
+				break;
+			}
+		}
 	}
+	else {
+		optScore = INT_MAX;
+		for(int i = 0; i < nextPos.size(); ++i) {
+			copy(grid, grid + ROW*COL, tempGrid);
+			tempGrid[inpPos[nextPos[i]]][nextPos[i]] = p1.getPiece();
+			colScore = miniMax(tempGrid, p1, p2, depth-1, alpha, beta, true);
+			col = colScore.first;
+			score = colScore.second;
+			if(score < optScore) {
+				optScore = score;
+				col = nextPos[i];
+			}
+			beta = min(beta, optScore);
+			if(alpha >= beta) {
+				break;
+			}
+		}
+	}
+	//cout<<depth<<" : "<<col<<" : "<<score<<endl;
+	return make_pair(col, optScore);
 }
 
-void playComp(Player p, bool realTurn) {
-	if(realTurn)	updateTurn();
+void playComp(Player p1, Player p2) {
+	
+	cout<<"hello"<<endl;
+	pair<int, int>  colScore = miniMax(grid, p1, p2, 4, INT_MIN, INT_MAX, true);
+	int optCol = colScore.first;
+	grid[inpPos[optCol]][optCol] = p2.getPiece();
+	findWin(p2);
+	updateTurn();
 }
 
 int main() {
@@ -263,16 +330,17 @@ int main() {
 	while(!askWhoPlayer1());
 	Player user(player1), comp(!player1);
 	printGrid();
+	won = 0;
 	turns = 0;	
 	do {
 		if(player1) {
 			play(user);
 		}
 		else {
-			playComp(comp, true);
+			playComp(user, comp);
 		}
 		printGrid();
-	}while(!findWin());
+	}while(!won);
 
 	cout<<"\n\nGame over !\n\n";
 
