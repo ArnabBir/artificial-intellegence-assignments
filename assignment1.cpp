@@ -24,10 +24,12 @@ class Player {
 
  	char piece;
  	bool won;
+ 	bool isComp;
 
  	public:
- 		Player(bool b) {
+ 		Player(bool b, bool comp) {
  			setPiece(b);
+ 			setIsComp(comp);
  			setWon(false); 
  		}
  		void setPiece(bool b) {
@@ -41,6 +43,12 @@ class Player {
  		}
  		bool getWon() {
  			return won;
+ 		}
+ 		void setIsComp(bool b) {
+ 			isComp = b;
+ 		}
+ 		bool getIsComp() {
+ 			return isComp;
  		}
 };
 
@@ -115,15 +123,17 @@ void buildGrid() {
 	}
 }
 
-bool findWin(Player p, bool real) {
+bool findWin(Player & p, bool real) {
 
 	char color = p.getPiece();
 	for(int j = 0; j < COL-3; ++j) {
 		for(int i = 0; i < ROW; ++i) {
 			if((grid[i][j] == color) && (grid[i][j+1] == color) && (grid[i][j+2] == color) && (grid[i][j+3] == color)) {
-				//cout<<"Horizontal : "<<i<<" "<<j<<endl;
-				//printGrid();
-				if(real)	won = player1 ? 1 : 2;
+				if(real){
+					cout<<"\nHorizontal : "<<i+1<<" "<<j+1<<endl;
+					won = p.getIsComp() ? 2 : 1;
+					p.setWon(true);
+				}
 				return true;
 			}
 		}
@@ -132,9 +142,11 @@ bool findWin(Player p, bool real) {
 	for(int j = 0; j < COL; ++j) {
 		for(int i = 0; i < ROW-3; ++i) {
 			if((grid[i][j] == color) && (grid[i+1][j] == color) && (grid[i+2][j] == color) && (grid[i+3][j] == color)) {
-				//cout<<"Vertical : "<<i<<" "<<j<<endl;
-				//printGrid();
-				if(real)	won = player1 ? 1 : 2;
+				if(real){
+					cout<<"\nVertical : "<<i+1<<" "<<j+1<<endl;
+					won = p.getIsComp() ? 2 : 1;
+					p.setWon(true);
+				}
 				return true;
 			}
 		}
@@ -142,10 +154,12 @@ bool findWin(Player p, bool real) {
 
 	for(int j = 0; j < COL-3; ++j) {
 		for(int i = 0; i < ROW-3; ++i) {
-			if((grid[i][j] == color) && (grid[i+1][j+i] == color) && (grid[i+2][j+2] == color) && (grid[i+3][j+3] == color)) {
-				//cout<<"Pos Diag : "<<i<<" "<<j<<endl;
-				//printGrid();
-				if(real)	won = player1 ? 1 : 2;
+			if((grid[i][j] == color) && (grid[i+1][j+1] == color) && (grid[i+2][j+2] == color) && (grid[i+3][j+3] == color)) {
+				if(real){
+					cout<<"\nFirst Diagonal : "<<i+1<<" "<<j+1<<endl;
+					won = p.getIsComp() ? 2 : 1;
+					p.setWon(true);
+				}
 				return true;
 			}
 		}
@@ -153,25 +167,29 @@ bool findWin(Player p, bool real) {
 
 	for(int j = 0; j < COL-3; ++j) {
 		for(int i = 3; i < ROW; ++i) {
-			if((grid[i][j] == color) && (grid[i-1][j+i] == color) && (grid[i-2][j+2] == color) && (grid[i-3][j+3] == color)) {
-				//cout<<"Neg Diag : "<<i<<" "<<j<<endl;
-				//printGrid();
-				if(real)	won = player1 ? 1 : 2;
+			if((grid[i][j] == color) && (grid[i-1][j+1] == color) && (grid[i-2][j+2] == color) && (grid[i-3][j+3] == color)) {
+				if(real){
+					cout<<"\nSecond Diagonal : "<<i+1<<" "<<j+1<<endl;
+					won = p.getIsComp() ? 2 : 1;
+					p.setWon(true);
+				}
 				return true;
 			}
 		}
 	}
 
-	return isMaxTurns();
+	if(isMaxTurns()) {
+		won = 3;
+	}
 }
 
 
-void play(Player p) {
+void play(Player & p) {
 
 	int col, i = ROW;
 	cout<<"Please select a column (1 - 7) : ";
 	cin>>col;
-	if(inpPos[col-1] == -1) {
+	if(inpPos[col-1] <= 0) {
 		cout<<"Invalid move ! Please try again.\n\n";
 	}
 	else {
@@ -184,23 +202,23 @@ void play(Player p) {
 
 // int getWindowScore(int count, int empty) {
 
-// 	if(count == 4)	return 10000;
+// 	if(count == 4)	return 10000000;
 // 	if(count == 3 && empty == 1)	return 50;
 // 	if(count == 2 && empty == 2)	return 40;
-// 	if(count == 1 && empty == 3)	return 20;
+// 	if(count == 1 && empty == 3)	return 20	;
 
 // 	if(count == 3 && empty == 0)	return 15;
 // 	if(count == 2 && empty == 1)	return 10;
 // 	if(count == 2 && empty == 0)	return -5;
 // 	if(count == 1 && empty == 2)	return -10;
 // 	if(count == 1 && empty == 1)	return -20;
-// 	if(count == 1 && empty == 3)	return -50;
+// 	if(count == 1 && empty == 0)	return -50;
 
 // 	if(count == 0 && empty == 4)	return 0;
 // 	if(count == 0 && empty == 3)	return -5;
 // 	if(count == 0 && empty == 2)	return -20;
 // 	if(count == 0 && empty == 1)	return -100;
-// 	if(count == 0 && empty == 0)	return -10000;
+// 	if(count == 0 && empty == 0)	return -100000;
 
 // 	return 0;
 // }
@@ -214,7 +232,7 @@ int getWindowScore(int count, int empty) {
 	return 0;
 }
 
-int getScore(Player p) {
+int getScore(Player & p) {
 
 	int score = 0, countP, empty;
 	char color = p.getPiece();
@@ -282,29 +300,29 @@ int getScore(Player p) {
 	return score;
 }
 
-pair<int,int> miniMax(Player p1, Player p2, int depth, int alpha, int beta, bool maximizingPlayer) {
+pair<int,int> miniMax(Player & p1, Player & p2, int depth, int alpha, int beta, bool maximizingPlayer) {
 
 	pair<int,int>  colScore;
 	vector<int> nextPos = getNextPositions();
 	bool winP1 = findWin(p1, false);
 	bool winP2 = findWin(p2, false);
 	int col, score = 0, optScore;
+	if(winP1)	return make_pair(-1, -MAXSCORE);
+	if(winP2)	return make_pair(-1, MAXSCORE);
 	if(isMaxTurns())	return make_pair(-1, 0);
-	col = getRandomPosition(nextPos);
-	if(winP1)	return make_pair(col, -MAXSCORE);
-	if(winP2)	return make_pair(col, MAXSCORE);
 	if(depth == 0) {
-		return make_pair(col, getScore(p2));
+		if(MAXDEPTH % 2)	return make_pair(-1, getScore(p2));
+		else	return make_pair(-1, getScore(p1));
 	}
+	col = getRandomPosition(nextPos);
 	if(maximizingPlayer) {
 		optScore = INT_MIN;
 		for(int i = 0; i < nextPos.size(); ++i) {
+			if(inpPos[nextPos[i]] < 0)	return make_pair(-1, INT_MIN);
 			grid[inpPos[nextPos[i]]--][nextPos[i]] = p2.getPiece();
 			colScore = miniMax(p1, p2, depth-1, alpha, beta, false);
-			col = colScore.first;
 			score = colScore.second;
-			++inpPos[nextPos[i]];
-			grid[inpPos[nextPos[i]]][nextPos[i]] = '*';
+			grid[++inpPos[nextPos[i]]][nextPos[i]] = '*';
 			if(score > optScore) {
 				optScore = score;
 				col = nextPos[i];
@@ -318,12 +336,11 @@ pair<int,int> miniMax(Player p1, Player p2, int depth, int alpha, int beta, bool
 	else {
 		optScore = INT_MAX;
 		for(int i = 0; i < nextPos.size(); ++i) {
+			if(inpPos[nextPos[i]] < 0)	return make_pair(-1, INT_MAX);
 			grid[inpPos[nextPos[i]]--][nextPos[i]] = p1.getPiece();
 			colScore = miniMax(p1, p2, depth-1, alpha, beta, true);
-			col = colScore.first;
 			score = colScore.second;
-			++inpPos[nextPos[i]];
-			grid[inpPos[nextPos[i]]][nextPos[i]] = '*';
+			grid[++inpPos[nextPos[i]]][nextPos[i]] = '*';
 			if(score < optScore) {
 				optScore = score;
 				col = nextPos[i];
@@ -338,11 +355,16 @@ pair<int,int> miniMax(Player p1, Player p2, int depth, int alpha, int beta, bool
 	return make_pair(col, optScore);
 }
 
-void playComp(Player p1, Player p2) {
+void playComp(Player & p1, Player & p2) {
 	
-	pair<int, int>  colScore = miniMax(p1, p2, 4, INT_MIN, INT_MAX, true);
-	int optCol = colScore.first;
-	grid[inpPos[optCol]--][optCol] = p2.getPiece();
+	if(turns == 0) {
+		grid[inpPos[COL/2]--][COL/2] = p2.getPiece();
+	}
+	else {
+		pair<int, int>  colScore = miniMax(p1, p2, MAXDEPTH, INT_MIN, INT_MAX, true);
+		int optCol = colScore.first;
+		grid[inpPos[optCol]--][optCol] = p2.getPiece();
+	}
 	findWin(p2, true);
 	updateTurn();
 }
@@ -351,7 +373,7 @@ int main() {
 
  	buildGrid();
 	while(!askWhoPlayer1());
-	Player user(player1), comp(!player1);
+	Player user(player1, false), comp(!player1, true);
 	printGrid();
 	won = 0;
 	turns = 0;	
@@ -364,8 +386,17 @@ int main() {
 		}
 		printGrid();
 	}while(!won);
-
-	cout<<"\n\nGame over ! "<<won<<"\n\n";
-
+	cout<<"\n\nGame over ! "<<"\n\n";
+	if(won == 3) {
+		cout<<"\nResult : It is a tie.\n\n";
+	}
+	else {
+		if(user.getWon()) {
+			cout<<"\nResult : User won the game.\n\n";
+		}
+		else if(comp.getWon()) {
+			cout<<"\nResult : Computer won the game.\n\n";
+		}
+	}
 	return 0;
 }
