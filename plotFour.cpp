@@ -1,3 +1,5 @@
+/* Importing libraries */
+
 #include <iostream>
 #include <cstdio>
 #include <cstring>
@@ -7,12 +9,18 @@
 #include <string>
 #include <climits>
 
+/* Default constants */
+
 #define ROW 6
 #define COL 7
-#define MAXDEPTH 4
+#define MAXDEPTH 5
 #define MAXSCORE 1000000000
 
+/* using std as namespace */
+
 using namespace std;
+
+/* global variables */
 
 bool player1;
 vector<vector<char> > grid;
@@ -20,7 +28,7 @@ int turns;
 int inpPos[COL];
 int won;
 
-class Player {
+class Player {		//  Defines the states of a player (user / comp)
 
  	char piece;
  	bool won;
@@ -52,11 +60,11 @@ class Player {
  		}
 };
 
-bool isMaxTurns() {
+bool isMaxTurns() {		// 	Checks if the number of turns exceeded maximum
 	return turns >= ROW * COL;
 }
 
-vector<int>	getNextPositions() {
+vector<int>	getNextPositions() {	// Checks all available positions for next turn
 
 	vector<int> v;
 	for(int i = 0; i < COL; ++i) {
@@ -67,20 +75,20 @@ vector<int>	getNextPositions() {
 	return v;
 }
 
-int getRandomPosition(vector<int> & v) {
+int getRandomPosition(vector<int> & v) {	// Selects a column at random for initialization
 
 	int randIndex = rand() % static_cast<int>(v.size()+1);
 	return v[randIndex];
 
 }
 
-void updateTurn() {
+void updateTurn() {		// Updates states after each turn
 	
 	player1 = player1 ? false : true;
 	++turns;
 }
 
-bool askWhoPlayer1() {
+bool askWhoPlayer1() {	// Promts the user to ensure if he wants to begin as player 1
 
 	string s;
 
@@ -100,7 +108,7 @@ bool askWhoPlayer1() {
 	}
 }
 
-void printGrid() {
+void printGrid() {		// Prints the grid
 
 	cout<<"\nGrid : \n\n";
 	for(int i = 0; i < ROW; ++i) {
@@ -112,7 +120,7 @@ void printGrid() {
 	cout<<"\n";
 }
 
-void buildGrid() {
+void buildGrid() {		// Initializes the game
 
 	//memset(grid, '*', sizeof grid);
 	for(int i  = 0; i < ROW; ++i) {
@@ -123,14 +131,14 @@ void buildGrid() {
 	}
 }
 
-bool findWin(Player & p, bool real) {
+bool findWin(Player & p, bool real) {	// Checks if a player won
 
 	char color = p.getPiece();
 	for(int j = 0; j < COL-3; ++j) {
 		for(int i = 0; i < ROW; ++i) {
 			if((grid[i][j] == color) && (grid[i][j+1] == color) && (grid[i][j+2] == color) && (grid[i][j+3] == color)) {
 				if(real){
-					cout<<"\nHorizontal : "<<i+1<<" "<<j+1<<endl;
+					cout<<"\nHorizontal : ("<<i+1<<", "<<j+1<<")"<<endl;
 					won = p.getIsComp() ? 2 : 1;
 					p.setWon(true);
 				}
@@ -139,11 +147,11 @@ bool findWin(Player & p, bool real) {
 		}
 	}
 
-	for(int j = 0; j < COL; ++j) {
+	for(int j = 0; j < COL; ++j) {	
 		for(int i = 0; i < ROW-3; ++i) {
 			if((grid[i][j] == color) && (grid[i+1][j] == color) && (grid[i+2][j] == color) && (grid[i+3][j] == color)) {
 				if(real){
-					cout<<"\nVertical : "<<i+1<<" "<<j+1<<endl;
+					cout<<"\nVertical : ("<<i+1<<", "<<j+1<<")"<<endl;
 					won = p.getIsComp() ? 2 : 1;
 					p.setWon(true);
 				}
@@ -156,7 +164,7 @@ bool findWin(Player & p, bool real) {
 		for(int i = 0; i < ROW-3; ++i) {
 			if((grid[i][j] == color) && (grid[i+1][j+1] == color) && (grid[i+2][j+2] == color) && (grid[i+3][j+3] == color)) {
 				if(real){
-					cout<<"\nFirst Diagonal : "<<i+1<<" "<<j+1<<endl;
+					cout<<"\nFirst Diagonal : ("<<i+1<<", "<<j+1<<")"<<endl;
 					won = p.getIsComp() ? 2 : 1;
 					p.setWon(true);
 				}
@@ -169,7 +177,7 @@ bool findWin(Player & p, bool real) {
 		for(int i = 3; i < ROW; ++i) {
 			if((grid[i][j] == color) && (grid[i-1][j+1] == color) && (grid[i-2][j+2] == color) && (grid[i-3][j+3] == color)) {
 				if(real){
-					cout<<"\nSecond Diagonal : "<<i+1<<" "<<j+1<<endl;
+					cout<<"\nSecond Diagonal : ("<<i+1<<", "<<j+1<<")"<<endl;
 					won = p.getIsComp() ? 2 : 1;
 					p.setWon(true);
 				}
@@ -184,16 +192,15 @@ bool findWin(Player & p, bool real) {
 }
 
 
-void play(Player & p) {
+void play(Player & p) {		// Executes the user's turn
 
 	int col, i = ROW;
 	cout<<"Please select a column (1 - 7) : ";
 	cin>>col;
-	if(inpPos[col-1] <= 0) {
+	if(inpPos[col-1] < 0) {
 		cout<<"Invalid move ! Please try again.\n\n";
 	}
 	else {
-		cout<<inpPos[col-1]<<" "<<col-1<<endl;
 		grid[inpPos[col-1]--][col-1] = p.getPiece();
 		findWin(p, true);
 		updateTurn();
@@ -223,7 +230,7 @@ void play(Player & p) {
 // 	return 0;
 // }
 
-int getWindowScore(int count, int empty) {
+int getWindowScore(int count, int empty) {	// Reward pattern
 	
 	if(count == 4)	return 100;
 	if(count == 3 && empty == 1)	return 5;
@@ -232,7 +239,7 @@ int getWindowScore(int count, int empty) {
 	return 0;
 }
 
-int getScore(Player & p) {
+int getScore(Player & p) {	// Calculates the score for a 4 tuple
 
 	int score = 0, countP, empty;
 	char color = p.getPiece();
@@ -300,7 +307,7 @@ int getScore(Player & p) {
 	return score;
 }
 
-pair<int,int> miniMax(Player & p1, Player & p2, int depth, int alpha, int beta, bool maximizingPlayer) {
+pair<int,int> miniMaxAlphaBetaPruning(Player & p1, Player & p2, int depth, int alpha, int beta, bool maximizingPlayer) { 	// Executes minimax with alpha beta pruning
 
 	pair<int,int>  colScore;
 	vector<int> nextPos = getNextPositions();
@@ -320,7 +327,7 @@ pair<int,int> miniMax(Player & p1, Player & p2, int depth, int alpha, int beta, 
 		for(int i = 0; i < nextPos.size(); ++i) {
 			if(inpPos[nextPos[i]] < 0)	return make_pair(-1, INT_MIN);
 			grid[inpPos[nextPos[i]]--][nextPos[i]] = p2.getPiece();
-			colScore = miniMax(p1, p2, depth-1, alpha, beta, false);
+			colScore = miniMaxAlphaBetaPruning(p1, p2, depth-1, alpha, beta, false);
 			score = colScore.second;
 			grid[++inpPos[nextPos[i]]][nextPos[i]] = '*';
 			if(score > optScore) {
@@ -338,7 +345,7 @@ pair<int,int> miniMax(Player & p1, Player & p2, int depth, int alpha, int beta, 
 		for(int i = 0; i < nextPos.size(); ++i) {
 			if(inpPos[nextPos[i]] < 0)	return make_pair(-1, INT_MAX);
 			grid[inpPos[nextPos[i]]--][nextPos[i]] = p1.getPiece();
-			colScore = miniMax(p1, p2, depth-1, alpha, beta, true);
+			colScore = miniMaxAlphaBetaPruning(p1, p2, depth-1, alpha, beta, true);
 			score = colScore.second;
 			grid[++inpPos[nextPos[i]]][nextPos[i]] = '*';
 			if(score < optScore) {
@@ -351,25 +358,19 @@ pair<int,int> miniMax(Player & p1, Player & p2, int depth, int alpha, int beta, 
 			}
 		}
 	}
-	//cout<<depth<<" : "<<col<<" : "<<score<<endl;
 	return make_pair(col, optScore);
 }
 
-void playComp(Player & p1, Player & p2) {
+void playComp(Player & p1, Player & p2) {	// Executes the computer's turn
 	
-	if(turns == 0) {
-		grid[inpPos[COL/2]--][COL/2] = p2.getPiece();
-	}
-	else {
-		pair<int, int>  colScore = miniMax(p1, p2, MAXDEPTH, INT_MIN, INT_MAX, true);
-		int optCol = colScore.first;
-		grid[inpPos[optCol]--][optCol] = p2.getPiece();
-	}
+	pair<int, int>  colScore = miniMaxAlphaBetaPruning(p1, p2, MAXDEPTH, INT_MIN, INT_MAX, true);
+	int optCol = colScore.first;
+	grid[inpPos[optCol]--][optCol] = p2.getPiece();
 	findWin(p2, true);
 	updateTurn();
 }
 
-int main() {
+int main() {	// Main function
 
  	buildGrid();
 	while(!askWhoPlayer1());
